@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Apr 25 15:19:25 2018
-
-@author: zou
-"""
 import pygame as pg, random
 import numpy as np
 
@@ -111,19 +105,19 @@ class Game:
 
     def __init__(self):
         self.settings = Settings()
-        self.S = Snake()
+        self.Snake= Snake()
         self.apple = Apple(self.settings)
         self.move_dict = {0 : 'up', 1 : 'down', 2 : 'left', 3 : 'right'}
         
     def restart_game(self):
-        self.S.initialize()
+        self.Snake.initialize()
         self.apple.initialize()
 
     def current_state(self):         
         state = np.zeros((self.settings.w+2, self.settings.h+2, 2))
         expand = [[0, 1], [0, -1], [-1, 0], [1, 0], [0, 2], [0, -2], [-2, 0], [2, 0]]
         
-        for position in self.S.segments:
+        for position in self.Snake.segments:
             state[position[1], position[0], 0] = 1
         
         state[:, :, 1] = -0.5        
@@ -142,43 +136,43 @@ class Game:
         
         change_direction = move_dict[move]
         
-        if change_direction == 'right' and not self.S.zig == 'left':
-            self.S.zig= change_direction
-        if change_direction == 'left' and not self.S.zig == 'right':
-            self.S.zig = change_direction
-        if change_direction == 'up' and not self.S.zig == 'down':
-            self.S.zig = change_direction
-        if change_direction == 'down' and not self.S.zig == 'up':
-            self.S.zig = change_direction
+        if change_direction == 'right' and not self.Snake.zig == 'left':
+            self.Snake.zig= change_direction
+        if change_direction == 'left' and not self.Snake.zig == 'right':
+            self.Snake.zig = change_direction
+        if change_direction == 'up' and not self.Snake.zig == 'down':
+            self.Snake.zig = change_direction
+        if change_direction == 'down' and not self.Snake.zig == 'up':
+            self.Snake.zig = change_direction
 
-        self.S.update()
+        self.Snake.update()
         
-        if self.S.position == self.apple.position:
-            self.apple.random_pos(self.S)
+        if self.Snake.position == self.apple.position:
+            self.apple.random_pos(self.Snake)
             reward = 1
-            self.S.score += 1
+            self.Snake.score += 1
         else:
-            self.S.segments.pop()
+            self.Snake.segments.pop()
             reward = 0
                 
-        if self.g_end():
+        if self.game_end():
             return -1
                     
         return reward
     
-    def g_end(self):
+    def game_end(self):
         end = False
-        if self.S.position[0] >= self.settings.w or self.S.position[0] < 0:
+        if self.Snake.position[0] >= self.settings.w or self.Snake.position[0] < 0:
             end = True
-        if self.S.position[1] >= self.settings.h or self.S.position[1] < 0:
+        if self.Snake.position[1] >= self.settings.h or self.Snake.position[1] < 0:
             end = True
-        if self.S.segments[0] in self.S.segments[1:]:
+        if self.Snake.segments[0] in self.Snake.segments[1:]:
             end = True
 
         return end
     
     def blit_score(self, c, screen):
         f = pg.font.SysFont(None, 25)
-        t = f.render('Score: ' + str(self.S.score), True, c)
+        t = f.render('Score: ' + str(self.Snake.score), True, c)
         screen.blit(t, (0, 0))
 

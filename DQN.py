@@ -7,6 +7,7 @@ from collections import deque
 from game import Game
 from DQN_Value import Value
 
+tf.compat.v1.disable_eager_execution()
 
 class Deep_Q_Network:
     def __init__(self, sess, Game):
@@ -36,11 +37,11 @@ class Deep_Q_Network:
         # consist of [target_net, evaluate_net]
         self.build_net()
 
-        t_params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='target_net')
-        e_params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='eval_net')
+        t_params = tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.GLOBAL_VARIABLES, scope='target_net')
+        e_params = tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.GLOBAL_VARIABLES, scope='eval_net')
 
-        with tf.variable_scope('soft_replacement'):
-            self.target_replace_op = [tf.assign(t, e) for t, e in zip(t_params, e_params)]
+        with tf.compat.v1.variable_scope('soft_replacement'):
+            self.target_replace_op = [tf.compat.v1.assign(t, e) for t, e in zip(t_params, e_params)]
 
         self.loss_list = []
         self.restore_model()
@@ -48,25 +49,25 @@ class Deep_Q_Network:
     def conv_network(self, scope_name, state):
         settings = self.settings
 
-        with tf.variable_scope(scope_name):
-            conv1 = tf.layers.conv2d(state, filters=32, kernel_size=3,strides=1, padding="SAME",activation=tf.nn.relu, name="conv1")
-            conv2 = tf.layers.conv2d(conv1, filters=64, kernel_size=3,strides=1, padding="SAME",activation=tf.nn.relu, name="conv2")
-            conv3 = tf.layers.conv2d(conv2, filters=128, kernel_size=3,strides=1, padding="SAME",activation=tf.nn.relu, name="conv3")
-            conv4 = tf.layers.conv2d(conv3, filters=4, kernel_size=1,strides=1, padding="SAME",activation=tf.nn.relu, name="conv4")
+        with tf.compat.v1.variable_scope(scope_name):
+            conv1 = tf.compat.v1.layers.conv2d(state, filters=32, kernel_size=3,strides=1, padding="SAME",activation=tf.nn.relu, name="conv1")
+            conv2 = tf.compat.v1.layers.conv2d(conv1, filters=64, kernel_size=3,strides=1, padding="SAME",activation=tf.nn.relu, name="conv2")
+            conv3 = tf.compat.v1.layers.conv2d(conv2, filters=128, kernel_size=3,strides=1, padding="SAME",activation=tf.nn.relu, name="conv3")
+            conv4 = tf.compat.v1.layers.conv2d(conv3, filters=4, kernel_size=1,strides=1, padding="SAME",activation=tf.nn.relu, name="conv4")
 
             conv4_flat = tf.reshape(conv4, shape=[-1, 4 * (settings.w+2) * (settings.h+2)])
 
-            h_fc1 = tf.layers.dense(conv4_flat, 128, activation=tf.nn.relu)
-            q_value = tf.layers.dense(h_fc1, self.n_actions)
+            h_fc1 = tf.compat.v1.layers.dense(conv4_flat, 128, activation=tf.nn.relu)
+            q_value = tf.compat.v1.layers.dense(h_fc1, self.n_actions)
 
         return q_value
 
     def build_net(self):
         settings = self.settings
-        with tf.name_scope("inputs"):
-            self.s = tf.placeholder(tf.float32, shape=[None, settings.w+2, settings.h+2, 8], name="s")
-            self.r = tf.placeholder(tf.float32, [None, ], name='r')  # input Reward
-            self.a = tf.placeholder(tf.float32, [None, self.n_actions], name='a')  # input Action
+        with tf.compat.v1.name_scope("inputs"):
+            self.s = tf.compat.v1.placeholder(tf.float32, shape=[None, settings.w+2, settings.h+2, 8], name="s")
+            self.r = tf.compat.v1.placeholder(tf.float32, [None, ], name='r')  # input Reward
+            self.a = tf.compat.v1.placeholder(tf.float32, [None, self.n_actions], name='a')  # input Action
 
         # evaluate_net
         self.q_eval = self.conv_network('eval_net', self.s)
@@ -74,22 +75,22 @@ class Deep_Q_Network:
         # target_net
         self.q_next = self.conv_network('target_net', self.s)
 
-        action_value = tf.reduce_sum(tf.multiply(self.q_eval, self.a), reduction_indices=1)
-        self.loss = tf.reduce_mean(tf.square(self.r - action_value))
-        self.train_step = tf.train.AdamOptimizer(1e-6).minimize(self.loss)
+        action_value = tf.reduce_sum(input_tensor=tf.multiply(self.q_eval, self.a), axis=1)
+        self.loss = tf.reduce_mean(input_tensor=tf.square(self.r - action_value))
+        self.train_step = tf.compat.v1.train.AdamOptimizer(1e-6).minimize(self.loss)
 
     def restore_model(self):
         sess = self.sess
         model_file = self.model_file
-        self.saver = tf.train.Saver()
+        self.saver = tf.compat.v1.train.Saver()
 
         if os.path.exists(model_file + '.meta'):
             self.saver.restore(sess, model_file)
         else:
-            sess.run(tf.global_variables_initializer())
+            sess.run(tf.compat.v1.global_variables_initializer())
 
     def get_model_params(self):
-        gvars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)
+        gvars = tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.TRAINABLE_VARIABLES)
         return {gvar.op.name: value for gvar, value in zip(gvars, self.sess.run(gvars))}
 
     def choose_action(self, s_t):
@@ -215,8 +216,8 @@ class Deep_Q_Network:
 
 if __name__ == "__main__":
 
-    tf.reset_default_graph()
-    sess = tf.Session()
+    tf.compat.v1.reset_default_graph()
+    sess = tf.compat.v1.Session()
     game = Game()
     dqn = Deep_Q_Network(sess, game)
     dqn.train()
