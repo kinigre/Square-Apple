@@ -14,8 +14,8 @@ class Deep_Q_Network:
 
         self.sess = sess
         v = Value()
-        self.game = Game
-        self.settings = self.game.settings
+        self.g = Game()
+        self.settings = self.g.settings
         self.explore= v.EXPLORE
         self.n_actions = v.N_ACTIONS
         self.learning_rate = v.LEARNING_RATE
@@ -113,25 +113,25 @@ class Deep_Q_Network:
             self.epsilon -= (self.initial_epsilon - self.final_epsilon) / self.explore
 
     def play_a_game(self):
-        game = self.game
-        game.restart_game()
+        g = self.g
+        g.Restart_Game()
         score = 0
         step = 0
-        game_state = game.current_state()
-        s_t = np.concatenate((game_state, game_state, game_state, game_state), axis=2)
+        g_S = g.Current_State()
+        s_t = np.concatenate((g_S, g_S,g_S,g_S), axis=2)
 
-        while not game.g_end():
+        while not g.Game_End():
             a_t, action_index = self.choose_action(s_t, score)
             # run the selected action and observe next state and reward
             move = action_index
-            r_t = game.do_move(move)
+            r_t = g.Move(move)
 
             if r_t == 1:
                 score += 1
 
-            game_state = game.current_state()
-            end = game.g_end()
-            s_t1 = np.append(game_state, s_t[:, :, :-2], axis=2)
+            g_S = g.Current_State()
+            end = g.Game_End()
+            s_t1 = np.append(g_S, s_t[:, :, :-2], axis=2)
 
             self.memory.append((s_t, a_t, r_t, s_t1, end))
             self.update_epsilon()
@@ -167,7 +167,7 @@ class Deep_Q_Network:
             if end:
                 y_batch.append(r_batch[i])
             else:
-                y_batch.append(r_batch[i] + self.game * np.max(q_next[i]))
+                y_batch.append(r_batch[i] + self.g * np.max(q_next[i]))
 
         # perform gradient step
         sess.run(self.train_step, feed_dict = { self.r : y_batch,self.a : a_batch,self.s : s_batch})

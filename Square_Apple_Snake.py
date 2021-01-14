@@ -13,12 +13,12 @@ b_blue = (32, 200, 200)
 yellow = (255, 205, 0)
 b_yellow = (255, 255, 0)
 
-Game = Game()
-rect_len = Game.settings.rect_len
-snake = Game.Snake #snake
+g = Game()
+rect_len = g.settings.rect_len
+snake = g.snake #snake
 pg.init()
 fpsClock = pg.time.Clock()
-screen = pg.display.set_mode((Game.settings.w*15, Game.settings.h*15))
+screen = pg.display.set_mode((g.settings.w*15, g.settings.h*15))
 pg.display.set_caption('Square Apple')
 
 crash_sound = pg.mixer.Sound('./sound/crash.wav')
@@ -58,7 +58,7 @@ def quit_game():
     
 def crash():    
     pg.mixer.Sound.play(crash_sound)
-    message_display('crash', Game.settings.w/2*15, Game.settings.h/3*15, black)
+    message_display('crash', g.settings.w/2*15, g.settings.h/3*15, black)
     time.sleep(1)
    
 def initial_interface():
@@ -70,7 +70,7 @@ def initial_interface():
                 pg.quit()
                 
         screen.fill(white)
-        message_display('Square Apple', Game.settings.w/2*15, Game.settings.h/4*15)
+        message_display('Square Apple', g.settings.w/2*15, g.settings.h/4*15)
 
         button('DQN', 175, 210, 80, 40, yellow, b_yellow, DQN)
         button('Quit', 175, 270, 80, 40, red, b_red, quit_game)
@@ -84,35 +84,35 @@ def DQN():
     from DQN import Deep_Q_Network
     import numpy as np
     
-    Game.restart_game()
+    g.Restart_Game()
     
     tf.compat.v1.reset_default_graph()
     sess = tf.compat.v1.Session()
 
     dqn = Deep_Q_Network(sess, Game)
         
-    g_s = Game.current_state()
+    g_s = g.Current_State()
 
     start_state = np.concatenate((g_s, g_s, g_s, g_s), axis=2)
     s_t = start_state
     
-    while not Game.game_end():
+    while not g.Game_End():
 
         _, action_index = dqn.choose_action(s_t)
         
         move = action_index
-        Game.do_move(move)
+        g.Move(move)
         
         pg.event.pump()
         
-        g_s = Game.current_state()
+        g_s = g.Current_State()
         s_t = np.append(g_s, s_t[:, :, :-2], axis=2)
         
         screen.fill(white)
         
-        snake.blit(rect_len, screen)
-        Game.apple.blit(screen)
-        Game.blit_score(black, screen)
+        snake.Blit(rect_len, screen)
+        g.apple.Blit(screen)
+        g.Blit_Score(black, screen)
         
         pg.display.flip()
         
